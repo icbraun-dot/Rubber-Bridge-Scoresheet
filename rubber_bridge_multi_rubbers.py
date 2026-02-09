@@ -569,14 +569,14 @@ all_df = pd.read_sql_query("""
     SELECT
         p.name AS player,
         COUNT(*) AS deals_declared,
-        SUM(d.made) AS made,
-        SUM(CASE WHEN d.made = 0 THEN 1 ELSE 0 END) AS set,
+        SUM(d.made) AS made_count,
+        SUM(CASE WHEN d.made = 0 THEN 1 ELSE 0 END) AS sets,
         AVG(CASE WHEN d.tricks_result > 0 AND d.made = 1 THEN d.tricks_result ELSE NULL END) AS avg_overtricks,
         AVG(CASE WHEN d.doubled > 0 THEN 1.0 ELSE 0.0 END) AS doubled_rate
     FROM deals d
     JOIN players p ON p.player_id = d.declarer_player_id
     GROUP BY p.player_id
-    ORDER BY deals_declared DESC, made DESC
+    ORDER BY deals_declared DESC, made_count DESC
 """, conn)
 conn.close()
 
@@ -587,3 +587,4 @@ else:
     st.dataframe(all_df, use_container_width=True)
 
 st.caption("Database file is saved next to this app as rubber_bridge.sqlite")
+
