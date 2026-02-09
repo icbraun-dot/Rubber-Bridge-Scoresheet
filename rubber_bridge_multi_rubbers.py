@@ -470,11 +470,11 @@ with left:
         result_mode = st.selectbox("Result", ["Made", "Down"], index=0, disabled=(state["status"]=="complete"))
     with c7:
         if result_mode == "Made":
-            over = st.number_input("Overtricks", min_value=0, max_value=7, value=0, step=1, disabled=(state["status"]=="complete"))
+            over = st.number_input("Overtricks", min_value=0, max_value=max(0, 7 - int(level)), value=0, step=1, disabled=(state["status"]=="complete"))
             tricks_result = int(over)
             made = True
         else:
-            under = st.number_input("Undertricks", min_value=1, max_value=13, value=1, step=1, disabled=(state["status"]=="complete"))
+            under = st.number_input("Undertricks", min_value=1, max_value=max(1, 6 + int(level)), value=1, step=1, disabled=(state["status"]=="complete"))
             tricks_result = -int(under)
             made = False
 
@@ -569,14 +569,14 @@ all_df = pd.read_sql_query("""
     SELECT
         p.name AS player,
         COUNT(*) AS deals_declared,
-        SUM(d.made) AS made_count,
+        SUM(d.made) AS made,
         SUM(CASE WHEN d.made = 0 THEN 1 ELSE 0 END) AS sets,
         AVG(CASE WHEN d.tricks_result > 0 AND d.made = 1 THEN d.tricks_result ELSE NULL END) AS avg_overtricks,
         AVG(CASE WHEN d.doubled > 0 THEN 1.0 ELSE 0.0 END) AS doubled_rate
     FROM deals d
     JOIN players p ON p.player_id = d.declarer_player_id
     GROUP BY p.player_id
-    ORDER BY deals_declared DESC, made_count DESC
+    ORDER BY deals_declared DESC, made DESC
 """, conn)
 conn.close()
 
