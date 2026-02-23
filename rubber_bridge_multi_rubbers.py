@@ -636,6 +636,9 @@ with top1:
 
 
 
+st.subheader("Scoresheet")
+render_scoresheet(ns_names, ew_names, state, deals_df(rubber_id))
+
 st.divider()
 
 left, right = st.columns([1.25, 1])
@@ -731,11 +734,9 @@ with left:
 # Deal Log + rubber stats
 # -----------------------------
 with right:
-    st.subheader("Scoresheet")
+    st.subheader("Deal Log")
     df = deals_df(rubber_id)
 
-    # Scoresheet view
-    render_scoresheet(ns_names, ew_names, state, df)
 
     if df.empty:
         st.info("No deals yet.")
