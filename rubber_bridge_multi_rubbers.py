@@ -565,31 +565,17 @@ rubber_row = list_rubbers().query("rubber_id == @rubber_id").iloc[0]
 ns_names = f'{rubber_row["North"]} / {rubber_row["South"]}'
 ew_names = f'{rubber_row["East"]} / {rubber_row["West"]}'
 
-top1, top2, top3 = st.columns([1.4, 1.2, 1.4])
+top1 = st.container()
 
 with top1:
     st.subheader(f"Rubber #{rubber_id}")
     st.write(f"**NS:** {ns_names}")
     st.write(f"**EW:** {ew_names}")
+    st.caption(f"NS games: {state['ns_games']} • EW games: {state['ew_games']} • NS above: {state['ns_above']} • EW above: {state['ew_above']}")
     if state["status"] == "complete":
         st.success(f'Complete — Winner: **{state["winner_side"]}**')
 
-with top2:
-    st.subheader("Scoreboard")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.metric("NS Above", state["ns_above"])
-        st.metric("NS Below", state["ns_below"])
-        st.metric("NS Games", state["ns_games"])
-    with c2:
-        st.metric("EW Above", state["ew_above"])
-        st.metric("EW Below", state["ew_below"])
-        st.metric("EW Games", state["ew_games"])
 
-with top3:
-    st.subheader("Totals")
-    st.write(f"**NS total (above+current below):** {state['ns_above'] + state['ns_below']}")
-    st.write(f"**EW total (above+current below):** {state['ew_above'] + state['ew_below']}")
 
 st.divider()
 
