@@ -797,5 +797,3 @@ else:
     all_df = all_df.fillna({"avg_overtricks": 0})
     st.dataframe(all_df, use_container_width=True)
 
-st.caption("Database file is saved next to this app as rubber_bridge.sqlite")
-
