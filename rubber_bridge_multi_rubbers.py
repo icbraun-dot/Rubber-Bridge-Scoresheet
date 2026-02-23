@@ -7,6 +7,64 @@ from pathlib import Path
 
 st.set_page_config(page_title="Rubber Bridge — Score + Stats", layout="wide")
 
+# ============================================================
+# App theming (soft color palette)
+# ============================================================
+
+def inject_app_theme():
+    st.markdown(
+        """
+        <style>
+          /* Page background */
+          .stApp {
+            background: radial-gradient(1200px 600px at 15% 0%, rgba(86, 130, 255, 0.10), rgba(255,255,255,0) 55%),
+                        radial-gradient(900px 500px at 85% 10%, rgba(255, 125, 80, 0.10), rgba(255,255,255,0) 60%),
+                        linear-gradient(180deg, rgba(250, 251, 255, 1), rgba(246, 248, 255, 1));
+          }
+
+          /* Sidebar */
+          section[data-testid="stSidebar"] {
+            background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.88));
+            border-right: 1px solid rgba(0,0,0,0.06);
+          }
+
+          /* Headings */
+          h1, h2, h3 {
+            letter-spacing: -0.01em;
+          }
+
+          /* Buttons */
+          .stButton > button {
+            border-radius: 12px !important;
+            border: 1px solid rgba(0,0,0,0.10) !important;
+            background: linear-gradient(180deg, rgba(90, 120, 255, 0.16), rgba(90, 120, 255, 0.08)) !important;
+          }
+          .stButton > button:hover {
+            border-color: rgba(0,0,0,0.18) !important;
+            filter: brightness(1.02);
+          }
+
+          /* Dataframes a bit softer */
+          div[data-testid="stDataFrame"] {
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.06);
+            background: rgba(255,255,255,0.75);
+          }
+
+          /* Metric cards (if any remain) */
+          div[data-testid="stMetric"] {
+            border-radius: 14px;
+            border: 1px solid rgba(0,0,0,0.06);
+            background: rgba(255,255,255,0.70);
+            padding: 10px 12px;
+          }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+
 
 # ============================================================
 # Scoresheet-style UI (above/below the line)
@@ -83,20 +141,21 @@ def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.Da
     css = """
     <style>
       .sheet-wrap { border: 1px solid #e6e6e6; border-radius: 14px; overflow: hidden; }
-      .sheet-head { padding: 12px 14px; background: rgba(0,0,0,0.03); display:flex; justify-content:space-between; gap:10px; align-items:flex-end; flex-wrap:wrap;}
+      .sheet-head { padding: 12px 14px; background: linear-gradient(180deg, rgba(90, 120, 255, 0.10), rgba(255,255,255,0.65)); display:flex; justify-content:space-between; gap:10px; align-items:flex-end; flex-wrap:wrap;}
       .sheet-title { font-weight: 800; font-size: 15px; }
       .sheet-sub { color: rgba(0,0,0,0.65); font-size: 12px; }
+      .sheet-scroll { max-height: 72vh; overflow-y: auto; }
       .sheet-grid { width: 100%; border-collapse: collapse; table-layout: fixed;}
       .sheet-grid th, .sheet-grid td { padding: 8px 10px; vertical-align: top; }
       .sheet-grid th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: rgba(0,0,0,0.65); }
-      .col-split { border-left: 2px solid rgba(0,0,0,0.25); }
+      .col-split { border-left: 2px solid rgba(90, 120, 255, 0.35); }
       .above-row td { border-bottom: 1px dashed rgba(0,0,0,0.12); }
-      .below-sep td { border-top: 3px solid rgba(0,0,0,0.35); padding-top: 10px; }
+      .below-sep td { border-top: 3px solid rgba(255, 125, 80, 0.55); padding-top: 10px; }
       .game-tag { font-size: 12px; font-weight: 800; color: rgba(0,0,0,0.65); margin: 2px 0 8px 0;}
       .pts { font-size: 14px; font-weight: 800; line-height: 1.1; }
       .lbl { font-size: 12px; color: rgba(0,0,0,0.6); margin-top: 2px; }
       .totals { padding: 10px 14px; display:flex; gap:12px; justify-content:space-between; border-top: 1px solid rgba(0,0,0,0.12); background: rgba(0,0,0,0.015); flex-wrap:wrap;}
-      .pill { border: 1px solid rgba(0,0,0,0.12); padding: 6px 10px; border-radius: 999px; font-size: 12px; color: rgba(0,0,0,0.75); }
+      .pill { border: 1px solid rgba(0,0,0,0.10); padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.75); font-size: 12px; color: rgba(0,0,0,0.75); }
       .strong { font-weight: 900; }
       .muted { color: rgba(0,0,0,0.6); }
       .tiny { font-size: 11px; color: rgba(0,0,0,0.55); }
@@ -143,7 +202,7 @@ def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.Da
         <div class="sheet-sub"><span class="strong">NS</span>: {ns_names} &nbsp; • &nbsp; <span class="strong">EW</span>: {ew_names}</div>
         <div class="tiny">Tip: scroll inside the app to see older entries.</div>
       </div>
-      <table class="sheet-grid">
+      <div class="sheet-scroll"><table class="sheet-grid">
         <thead>
           <tr>
             <th>NS</th>
@@ -154,7 +213,7 @@ def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.Da
           {above_html}
           {below_html}
         </tbody>
-      </table>
+      </table></div>
       <div class="totals">
         <div class="pill"><span class="strong">NS</span> <span class="muted">Above</span>: {int(state['ns_above'])} &nbsp; <span class="muted">Current Below</span>: {int(state['ns_below'])} &nbsp; <span class="muted">Games</span>: {int(state['ns_games'])} &nbsp; <span class="muted">Total</span>: <span class="strong">{ns_total}</span></div>
         <div class="pill"><span class="strong">EW</span> <span class="muted">Above</span>: {int(state['ew_above'])} &nbsp; <span class="muted">Current Below</span>: {int(state['ew_below'])} &nbsp; <span class="muted">Games</span>: {int(state['ew_games'])} &nbsp; <span class="muted">Total</span>: <span class="strong">{ew_total}</span></div>
