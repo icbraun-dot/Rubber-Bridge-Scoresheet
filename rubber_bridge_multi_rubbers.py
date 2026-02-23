@@ -138,19 +138,6 @@ def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.Da
     ns_total = int(state["ns_above"]) + int(state["ns_below"])
     ew_total = int(state["ew_above"]) + int(state["ew_below"])
 
-    # Determine highlight classes
-    if state["status"] == "complete":
-        if state["winner_side"] == "NS":
-            ns_class = "pill-win"
-            ew_class = "pill-lose"
-        else:
-            ns_class = "pill-lose"
-            ew_class = "pill-win"
-    else:
-        ns_class = "pill-neutral"
-        ew_class = "pill-neutral"
-    
-
     css = """
     <style>
       .sheet-wrap { border: 1px solid #e6e6e6; border-radius: 14px; overflow: hidden; }
@@ -168,7 +155,7 @@ def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.Da
       .pts { font-size: 17px; font-weight: 900; line-height: 1.15; }
       .lbl { font-size: 14px; color: rgba(0,0,0,0.65); margin-top: 3px; }
       .totals { padding: 10px 14px; display:flex; gap:12px; justify-content:space-between; border-top: 1px solid rgba(0,0,0,0.12); background: rgba(0,0,0,0.015); flex-wrap:wrap;}
-      .pill { border: 1px solid rgba(0,0,0,0.10); padding: 10px 16px; border-radius: 999px; background: rgba(255,255,255,0.85); font-size: 16px; font-weight: 700; color: rgba(0,0,0,0.75); }
+      .pill { border: 1px solid rgba(0,0,0,0.10); padding: 12px 18px; border-radius: 999px; background: rgba(90,120,255,0.10); font-size: 16px; font-weight: 700; }
       .strong { font-weight: 900; font-size: 18px; }
       .muted { color: rgba(0,0,0,0.6); }
       .tiny { font-size: 11px; color: rgba(0,0,0,0.55); }
@@ -191,7 +178,7 @@ def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.Da
     else:
         above_html = "<tr class='above-row'><td class='muted'>No above-the-line entries yet.</td><td class='col-split'></td></tr>"
 
-    # Below-the-line section, split by games
+    # Below-the-line section split by games
     below_html = "<tr class='below-sep'><td colspan='2'></td></tr>"
     if games:
         for gi, grows in enumerate(games, start=1):
@@ -213,26 +200,28 @@ def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.Da
           <div class="sheet-sub">Above the line (bonuses/penalties) • Below the line (contract points)</div>
         </div>
         <div class="sheet-sub"><span class="strong">NS</span>: {ns_names} &nbsp; • &nbsp; <span class="strong">EW</span>: {ew_names}</div>
-        <div class="tiny">Tip: scroll inside the app to see older entries.</div>
+        <div class="tiny">Tip: scroll inside the sheet to see older entries.</div>
       </div>
-      <div class="sheet-scroll"><table class="sheet-grid">
-        <thead>
-          <tr>
-            <th>NS</th>
-            <th class="col-split">EW</th>
-          </tr>
-        </thead>
-        <tbody>
-          {above_html}
-          {below_html}
-        </tbody>
-      </table></div>
-      
+
+      <div class="sheet-scroll">
+        <table class="sheet-grid">
+          <thead>
+            <tr>
+              <th>NS</th>
+              <th class="col-split">EW</th>
+            </tr>
+          </thead>
+          <tbody>
+            {above_html}
+            {below_html}
+          </tbody>
+        </table>
+      </div>
+
       <div class="totals">
-        <div class="pill {ns_class}"><span class="strong">NS</span> <span class="muted">Above</span>: {int(state['ns_above'])} &nbsp; <span class="muted">Current Below</span>: {int(state['ns_below'])} &nbsp; <span class="muted">Games</span>: {int(state['ns_games'])} &nbsp; <span class="muted">Total</span>: <span class="strong">{ns_total}</span></div>
-        <div class="pill {ew_class}"><span class="strong">EW</span> <span class="muted">Above</span>: {int(state['ew_above'])} &nbsp; <span class="muted">Current Below</span>: {int(state['ew_below'])} &nbsp; <span class="muted">Games</span>: {int(state['ew_games'])} &nbsp; <span class="muted">Total</span>: <span class="strong">{ew_total}</span></div>
-</div>
-    
+        <div class="pill"><span class="strong">NS</span> <span class="muted">Above</span>: {int(state['ns_above'])} &nbsp; <span class="muted">Current Below</span>: {int(state['ns_below'])} &nbsp; <span class="muted">Games</span>: {int(state['ns_games'])} &nbsp; <span class="muted">Total</span>: <span class="strong">{ns_total}</span></div>
+        <div class="pill"><span class="strong">EW</span> <span class="muted">Above</span>: {int(state['ew_above'])} &nbsp; <span class="muted">Current Below</span>: {int(state['ew_below'])} &nbsp; <span class="muted">Games</span>: {int(state['ew_games'])} &nbsp; <span class="muted">Total</span>: <span class="strong">{ew_total}</span></div>
+      </div>
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
