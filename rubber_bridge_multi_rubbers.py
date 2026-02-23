@@ -142,18 +142,18 @@ def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.Da
     <style>
       .sheet-wrap { border: 1px solid #e6e6e6; border-radius: 14px; overflow: hidden; }
       .sheet-head { padding: 12px 14px; background: linear-gradient(180deg, rgba(90, 120, 255, 0.10), rgba(255,255,255,0.65)); display:flex; justify-content:space-between; gap:10px; align-items:flex-end; flex-wrap:wrap;}
-      .sheet-title { font-weight: 800; font-size: 15px; }
+      .sheet-title { font-weight: 900; font-size: 18px; }
       .sheet-sub { color: rgba(0,0,0,0.65); font-size: 12px; }
       .sheet-scroll { max-height: 72vh; overflow-y: auto; }
       .sheet-grid { width: 100%; border-collapse: collapse; table-layout: fixed;}
-      .sheet-grid th, .sheet-grid td { padding: 8px 10px; vertical-align: top; }
-      .sheet-grid th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: rgba(0,0,0,0.65); }
+      .sheet-grid th, .sheet-grid td { padding: 10px 12px; vertical-align: top; font-size: 15px; }
+      .sheet-grid th { font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: rgba(0,0,0,0.65); }
       .col-split { border-left: 2px solid rgba(90, 120, 255, 0.35); }
       .above-row td { border-bottom: 1px dashed rgba(0,0,0,0.12); }
       .below-sep td { border-top: 3px solid rgba(255, 125, 80, 0.55); padding-top: 10px; }
       .game-tag { font-size: 12px; font-weight: 800; color: rgba(0,0,0,0.65); margin: 2px 0 8px 0;}
-      .pts { font-size: 14px; font-weight: 800; line-height: 1.1; }
-      .lbl { font-size: 12px; color: rgba(0,0,0,0.6); margin-top: 2px; }
+      .pts { font-size: 17px; font-weight: 900; line-height: 1.15; }
+      .lbl { font-size: 14px; color: rgba(0,0,0,0.65); margin-top: 3px; }
       .totals { padding: 10px 14px; display:flex; gap:12px; justify-content:space-between; border-top: 1px solid rgba(0,0,0,0.12); background: rgba(0,0,0,0.015); flex-wrap:wrap;}
       .pill { border: 1px solid rgba(0,0,0,0.10); padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.75); font-size: 12px; color: rgba(0,0,0,0.75); }
       .strong { font-weight: 900; }
@@ -557,7 +557,7 @@ def apply_deal_to_state(state: dict, side: str, made: bool, below: int, above: i
 # UI
 # ============================================================
 
-st.title("Rubber Bridge — Running Tab Across Multiple Rubbers")
+st.title("Rubber Bridge Scoresheet")
 
 # --- Sidebar: Player management + Rubber selection ---
 with st.sidebar:
