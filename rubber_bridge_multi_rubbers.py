@@ -138,6 +138,19 @@ def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.Da
     ns_total = int(state["ns_above"]) + int(state["ns_below"])
     ew_total = int(state["ew_above"]) + int(state["ew_below"])
 
+    # Determine highlight classes
+    if state["status"] == "complete":
+        if state["winner_side"] == "NS":
+            ns_class = "pill-win"
+            ew_class = "pill-lose"
+        else:
+            ns_class = "pill-lose"
+            ew_class = "pill-win"
+    else:
+        ns_class = "pill-neutral"
+        ew_class = "pill-neutral"
+    
+
     css = """
     <style>
       .sheet-wrap { border: 1px solid #e6e6e6; border-radius: 14px; overflow: hidden; }
@@ -155,8 +168,8 @@ def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.Da
       .pts { font-size: 17px; font-weight: 900; line-height: 1.15; }
       .lbl { font-size: 14px; color: rgba(0,0,0,0.65); margin-top: 3px; }
       .totals { padding: 10px 14px; display:flex; gap:12px; justify-content:space-between; border-top: 1px solid rgba(0,0,0,0.12); background: rgba(0,0,0,0.015); flex-wrap:wrap;}
-      .pill { border: 1px solid rgba(0,0,0,0.10); padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.75); font-size: 12px; color: rgba(0,0,0,0.75); }
-      .strong { font-weight: 900; }
+      .pill { border: 1px solid rgba(0,0,0,0.10); padding: 10px 16px; border-radius: 999px; background: rgba(255,255,255,0.85); font-size: 16px; font-weight: 700; color: rgba(0,0,0,0.75); }
+      .strong { font-weight: 900; font-size: 18px; }
       .muted { color: rgba(0,0,0,0.6); }
       .tiny { font-size: 11px; color: rgba(0,0,0,0.55); }
     </style>
@@ -214,10 +227,23 @@ def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.Da
           {below_html}
         </tbody>
       </table></div>
+      
       <div class="totals">
-        <div class="pill"><span class="strong">NS</span> <span class="muted">Above</span>: {int(state['ns_above'])} &nbsp; <span class="muted">Current Below</span>: {int(state['ns_below'])} &nbsp; <span class="muted">Games</span>: {int(state['ns_games'])} &nbsp; <span class="muted">Total</span>: <span class="strong">{ns_total}</span></div>
-        <div class="pill"><span class="strong">EW</span> <span class="muted">Above</span>: {int(state['ew_above'])} &nbsp; <span class="muted">Current Below</span>: {int(state['ew_below'])} &nbsp; <span class="muted">Games</span>: {int(state['ew_games'])} &nbsp; <span class="muted">Total</span>: <span class="strong">{ew_total}</span></div>
+        {{
+            "" if state["status"] == "active" else ""
+        }}
+        <div class="pill {ns_class}"><span class="strong">NS</span> Above: {int(state['ns_above'])} 
+        &nbsp; Current Below: {int(state['ns_below'])} 
+        &nbsp; Games: {int(state['ns_games'])} 
+        &nbsp; Total: <span class="strong">{ns_total}</span></div>
+
+        <div class="pill {ew_class}"><span class="strong">EW</span> Above: {int(state['ew_above'])} 
+        &nbsp; Current Below: {int(state['ew_below'])} 
+        &nbsp; Games: {int(state['ew_games'])} 
+        &nbsp; Total: <span class="strong">{ew_total}</span></div>
       </div>
+    </div>
+    
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
@@ -792,4 +818,7 @@ if all_df.empty:
 else:
     all_df = all_df.fillna({"avg_overtricks": 0})
     st.dataframe(all_df, use_container_width=True)
+
+st.caption("Database file is saved next to this app as rubber_bridge.sqlite")
+
 
