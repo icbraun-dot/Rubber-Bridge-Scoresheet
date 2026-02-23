@@ -59,7 +59,27 @@ def inject_app_theme():
             background: rgba(255,255,255,0.70);
             padding: 10px 12px;
           }
-        </style>
+        
+          /* Subtle card-suit pattern overlay */
+          .stApp::before {
+            content: "♠  ♥  ♦  ♣   ♣  ♦  ♥  ♠   ♦  ♣  ♠  ♥";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            font-size: 34px;
+            line-height: 1.6;
+            letter-spacing: 18px;
+            white-space: pre-wrap;
+            opacity: 0.06;
+            color: rgba(0,0,0,0.9);
+            transform: rotate(-8deg);
+            top: -80px;
+            left: -60px;
+          }
+          /* Keep app content above the overlay */
+          .stApp > div { position: relative; z-index: 1; }
+</style>
         """,
         unsafe_allow_html=True
     )
