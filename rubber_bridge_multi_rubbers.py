@@ -821,4 +821,3 @@ else:
 
 st.caption("Database file is saved next to this app as rubber_bridge.sqlite")
 
-
