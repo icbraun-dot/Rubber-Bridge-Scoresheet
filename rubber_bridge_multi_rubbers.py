@@ -7,6 +7,163 @@ from pathlib import Path
 
 st.set_page_config(page_title="Rubber Bridge — Score + Stats", layout="wide")
 
+
+# ============================================================
+# Scoresheet-style UI (above/below the line)
+# ============================================================
+
+def _format_points(x: int) -> str:
+    return "" if x == 0 or x is None else str(int(x))
+
+def build_scoresheet_rows(df_deals: pd.DataFrame):
+    """
+    Convert deals into two ledgers:
+      - above_rows: list of tuples (ns_points, ew_points, label)
+      - below_games: list of games, each game is list of tuples (ns_points, ew_points, label)
+    We replay below-the-line accumulation to split into games.
+    """
+    above_rows = []
+    games = []
+    current_game_rows = []
+    below_ns = 0
+    below_ew = 0
+
+    for _, r in df_deals.iterrows():
+        contract = f"{int(r['level'])}{r['strain']}{'' if int(r['doubled'])==0 else ('X' if int(r['doubled'])==1 else 'XX')}"
+        made = int(r["made"]) == 1
+        side = r["side"]
+        declarer = r["declarer"]
+        tricks_result = int(r["tricks_result"])
+        result_txt = (f"+{tricks_result}" if made and tricks_result > 0 else ("=" if made else str(tricks_result)))
+        label = f"Deal {int(r['deal_no'])}: {side} {declarer} {contract} ({result_txt})"
+
+        below = int(r["below"])
+        above = int(r["above"])
+        defense_above = int(r["defense_above"])
+
+        # Below the line: only made contract points (not bonuses/overtricks)
+        if made and below > 0:
+            if side == "NS":
+                current_game_rows.append((below, 0, label))
+                below_ns += below
+            else:
+                current_game_rows.append((0, below, label))
+                below_ew += below
+
+            # Split into games at 100+ below the line
+            if below_ns >= 100 or below_ew >= 100:
+                games.append(current_game_rows)
+                current_game_rows = []
+                below_ns = 0
+                below_ew = 0
+
+        # Above the line: bonuses, overtricks, penalties
+        if made and above > 0:
+            if side == "NS":
+                above_rows.append((above, 0, label))
+            else:
+                above_rows.append((0, above, label))
+        elif (not made) and defense_above > 0:
+            # Defenders score above the line
+            if side == "NS":
+                above_rows.append((0, defense_above, label + " — set"))
+            else:
+                above_rows.append((defense_above, 0, label + " — set"))
+
+    if current_game_rows:
+        games.append(current_game_rows)
+
+    return above_rows, games
+
+def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.DataFrame):
+    above_rows, games = build_scoresheet_rows(df_deals)
+    ns_total = int(state["ns_above"]) + int(state["ns_below"])
+    ew_total = int(state["ew_above"]) + int(state["ew_below"])
+
+    css = """
+    <style>
+      .sheet-wrap { border: 1px solid #e6e6e6; border-radius: 14px; overflow: hidden; }
+      .sheet-head { padding: 12px 14px; background: rgba(0,0,0,0.03); display:flex; justify-content:space-between; gap:10px; align-items:flex-end; flex-wrap:wrap;}
+      .sheet-title { font-weight: 800; font-size: 15px; }
+      .sheet-sub { color: rgba(0,0,0,0.65); font-size: 12px; }
+      .sheet-grid { width: 100%; border-collapse: collapse; table-layout: fixed;}
+      .sheet-grid th, .sheet-grid td { padding: 8px 10px; vertical-align: top; }
+      .sheet-grid th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: rgba(0,0,0,0.65); }
+      .col-split { border-left: 2px solid rgba(0,0,0,0.25); }
+      .above-row td { border-bottom: 1px dashed rgba(0,0,0,0.12); }
+      .below-sep td { border-top: 3px solid rgba(0,0,0,0.35); padding-top: 10px; }
+      .game-tag { font-size: 12px; font-weight: 800; color: rgba(0,0,0,0.65); margin: 2px 0 8px 0;}
+      .pts { font-size: 14px; font-weight: 800; line-height: 1.1; }
+      .lbl { font-size: 12px; color: rgba(0,0,0,0.6); margin-top: 2px; }
+      .totals { padding: 10px 14px; display:flex; gap:12px; justify-content:space-between; border-top: 1px solid rgba(0,0,0,0.12); background: rgba(0,0,0,0.015); flex-wrap:wrap;}
+      .pill { border: 1px solid rgba(0,0,0,0.12); padding: 6px 10px; border-radius: 999px; font-size: 12px; color: rgba(0,0,0,0.75); }
+      .strong { font-weight: 900; }
+      .muted { color: rgba(0,0,0,0.6); }
+      .tiny { font-size: 11px; color: rgba(0,0,0,0.55); }
+    </style>
+    """
+
+    def td_cell(points, label):
+        pts_html = f'<div class="pts">{points}</div>' if points != "" else ""
+        lbl_html = f'<div class="lbl">{label}</div>' if label else ""
+        return f"<td>{pts_html}{lbl_html}</td>"
+
+    # Above-the-line rows
+    above_html = ""
+    if above_rows:
+        for ns_pts, ew_pts, label in above_rows:
+            above_html += "<tr class='above-row'>"
+            above_html += td_cell(_format_points(ns_pts), label if ns_pts else "")
+            above_html += td_cell(_format_points(ew_pts), label if ew_pts else "").replace("<td>", "<td class='col-split'>", 1)
+            above_html += "</tr>"
+    else:
+        above_html = "<tr class='above-row'><td class='muted'>No above-the-line entries yet.</td><td class='col-split'></td></tr>"
+
+    # Below-the-line section, split by games
+    below_html = "<tr class='below-sep'><td colspan='2'></td></tr>"
+    if games:
+        for gi, grows in enumerate(games, start=1):
+            below_html += f"<tr><td colspan='2'><div class='game-tag'>Below the line — Game {gi}</div></td></tr>"
+            for ns_pts, ew_pts, label in grows:
+                below_html += "<tr class='above-row'>"
+                below_html += td_cell(_format_points(ns_pts), label if ns_pts else "")
+                below_html += td_cell(_format_points(ew_pts), label if ew_pts else "").replace("<td>", "<td class='col-split'>", 1)
+                below_html += "</tr>"
+    else:
+        below_html += "<tr><td class='muted'>No below-the-line entries yet.</td><td class='col-split'></td></tr>"
+
+    html = f"""
+    <div class="sheet-wrap">
+      {css}
+      <div class="sheet-head">
+        <div>
+          <div class="sheet-title">Scoresheet</div>
+          <div class="sheet-sub">Above the line (bonuses/penalties) • Below the line (contract points)</div>
+        </div>
+        <div class="sheet-sub"><span class="strong">NS</span>: {ns_names} &nbsp; • &nbsp; <span class="strong">EW</span>: {ew_names}</div>
+        <div class="tiny">Tip: scroll inside the app to see older entries.</div>
+      </div>
+      <table class="sheet-grid">
+        <thead>
+          <tr>
+            <th>NS</th>
+            <th class="col-split">EW</th>
+          </tr>
+        </thead>
+        <tbody>
+          {above_html}
+          {below_html}
+        </tbody>
+      </table>
+      <div class="totals">
+        <div class="pill"><span class="strong">NS</span> <span class="muted">Above</span>: {int(state['ns_above'])} &nbsp; <span class="muted">Current Below</span>: {int(state['ns_below'])} &nbsp; <span class="muted">Games</span>: {int(state['ns_games'])} &nbsp; <span class="muted">Total</span>: <span class="strong">{ns_total}</span></div>
+        <div class="pill"><span class="strong">EW</span> <span class="muted">Above</span>: {int(state['ew_above'])} &nbsp; <span class="muted">Current Below</span>: {int(state['ew_below'])} &nbsp; <span class="muted">Games</span>: {int(state['ew_games'])} &nbsp; <span class="muted">Total</span>: <span class="strong">{ew_total}</span></div>
+      </div>
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
+
 # ============================================================
 # Persistent storage (SQLite)
 # ============================================================
@@ -529,8 +686,11 @@ with left:
 # Deal Log + rubber stats
 # -----------------------------
 with right:
-    st.subheader("Deal Log")
+    st.subheader("Scoresheet")
     df = deals_df(rubber_id)
+
+    # Scoresheet view
+    render_scoresheet(ns_names, ew_names, state, df)
 
     if df.empty:
         st.info("No deals yet.")
@@ -543,7 +703,8 @@ with right:
             axis=1
         )
         show = df[["deal_no","side","declarer","contract","result","vul","below","above","defense_above"]]
-        st.dataframe(show, use_container_width=True, height=360)
+        with st.expander("Show deal log table"):
+            st.dataframe(show, use_container_width=True, height=360)
 
         st.subheader("Basic Rubber Stats")
         df["made_int"] = df["made"].astype(int)
