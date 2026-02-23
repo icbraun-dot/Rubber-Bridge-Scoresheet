@@ -229,20 +229,9 @@ def render_scoresheet(ns_names: str, ew_names: str, state: dict, df_deals: pd.Da
       </table></div>
       
       <div class="totals">
-        {{
-            "" if state["status"] == "active" else ""
-        }}
-        <div class="pill {ns_class}"><span class="strong">NS</span> Above: {int(state['ns_above'])} 
-        &nbsp; Current Below: {int(state['ns_below'])} 
-        &nbsp; Games: {int(state['ns_games'])} 
-        &nbsp; Total: <span class="strong">{ns_total}</span></div>
-
-        <div class="pill {ew_class}"><span class="strong">EW</span> Above: {int(state['ew_above'])} 
-        &nbsp; Current Below: {int(state['ew_below'])} 
-        &nbsp; Games: {int(state['ew_games'])} 
-        &nbsp; Total: <span class="strong">{ew_total}</span></div>
-      </div>
-    </div>
+        <div class="pill {ns_class}"><span class="strong">NS</span> <span class="muted">Above</span>: {int(state['ns_above'])} &nbsp; <span class="muted">Current Below</span>: {int(state['ns_below'])} &nbsp; <span class="muted">Games</span>: {int(state['ns_games'])} &nbsp; <span class="muted">Total</span>: <span class="strong">{ns_total}</span></div>
+        <div class="pill {ew_class}"><span class="strong">EW</span> <span class="muted">Above</span>: {int(state['ew_above'])} &nbsp; <span class="muted">Current Below</span>: {int(state['ew_below'])} &nbsp; <span class="muted">Games</span>: {int(state['ew_games'])} &nbsp; <span class="muted">Total</span>: <span class="strong">{ew_total}</span></div>
+</div>
     
     </div>
     """
